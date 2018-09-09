@@ -182,11 +182,43 @@ cli._registerHandler_complete = function () {
     });
 }
 
+cli._testDetections = function (detectionList) {
+  var feelingValues = {};
+  var feelingList = db.getFeelingList();
+  for (var i=0; i<feelingList.length; ++i) {
+    var feeling = feelingList[i];
+    feelingValues[feeling] = 0;
+    for (var j=0; j<detectionList.length; ++j) {
+      var detection = detectionList[j];
+      feelingValues[feeling] += db.getFeelingValues(detection)[feeling];
+    }
+  }
+  return feelingValues;
+}
+
+cli._registerHandler_test = function () {
+  vorpal
+    .command('test [detections...]', 'Test feeling detections.')
+    .action(function(args, callback) {
+      if (args.detections && args.detections.length > 0) {
+        var feelingValues = cli._testDetections(args.detections);
+        for (var feeling in feelingValues) {
+          console.log('  ' + feeling + ': ' + feelingValues[feeling]);
+        }
+      } else {
+        this.log('invalid command');
+      }
+
+      callback();
+    });
+}
+
 cli.registerHandlers = function () {
   cli._registerHandler_show();
   cli._registerHandler_feel();
   cli._registerHandler_update();
   cli._registerHandler_complete();
+  cli._registerHandler_test();
 }
 
 cli.launch = function () {
